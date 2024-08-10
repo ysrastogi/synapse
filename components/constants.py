@@ -12,17 +12,8 @@ class LLMModelSource:
     AZURE = ["gpt-4o", "gpt-4-turbo-preview"]
     OPENAI = ["gpt-4o", ""]
 
-def fetch_openai_models():
-    url = "https://api.openai.com/v1/models"
-    headers = {
-        "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"
-    }
 
-    response = requests.get(url, headers=headers)
+class RelevantParameters:
+    AZURE_CHAT_COMPLETION = ['temperature', 'max_tokens', 'top_p', 'frequency_penalty', 'presence_penalty', 'stop', 'logit_bias', 'stream', 'logprobs', 'top_logprobs', 'response_format', 'seed']
+    OPENAI_CHAT_COMPLETION = [ 'temperature', 'max_tokens', 'top_p', 'frequency_penalty', 'presence_penalty', 'stop', 'logit_bias', 'stream', 'logprobs', 'top_logprobs', 'response_format', 'seed']
 
-    if response.status_code == 200:
-        models = response.json()
-        return models
-    else:
-        print(f"Failed to fetch models: {response.status_code}")
-        return None
