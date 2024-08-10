@@ -3,8 +3,9 @@ from typing import ClassVar
 from pydantic import BaseModel, ConfigDict
 
 class LLMProperties(models.Model):
+    response_format = models.CharField(null=True, blank=True)
     seed = models.IntegerField(null=True, blank=True)
-    stop_sequence = models.CharField(max_length=255, null=True, blank=True)
+    stop = models.CharField(max_length=255, null=True, blank=True)
     temperature = models.FloatField(null=True, blank=True)
     mirostat = models.FloatField(default=False)
     mirostat_eta = models.FloatField(null=True, blank=True)
@@ -22,7 +23,11 @@ class LLMProperties(models.Model):
     use_mmap = models.BooleanField(default=False)
     use_mlock = models.BooleanField(default=False)
     num_thread = models.IntegerField(null=True, blank=True)
-
+    logit_bias = models.JSONField(null=True, blank=True)
+    logprobs = models.BooleanField(default=False)
+    top_logprobs = models.IntegerField(null=True, blank=True)
+    stream = models.BooleanField(null=False, blank=True)
+    
     def __str__(self):
         return f"LLMProperties(id={self.id})"
 
