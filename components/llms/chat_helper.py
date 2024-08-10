@@ -13,14 +13,15 @@ class chat_completions:
         self.messages = messages
         self.llm = get_llm(llm_source, model)
 
-    def generate_chat(self):
+    def generate_chat(self, tools):
         if self.llm_source is LLMSource.AZURE or LLMSource.OPENAI:
             relevant_params = RelevantParameters.OPENAI_CHAT_COMPLETION
         
         filtered_params = {k: v for k, v in self.parameters.properties.__dict__.items() if k in relevant_params and v is not None}
         response = self.llm.chat.completions.create(
             model=self.model,
-            messages = self.messages
+            messages = self.messages,
+            tools=tools,
             **filtered_params
         )
         return response
