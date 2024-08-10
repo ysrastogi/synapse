@@ -65,4 +65,4 @@ Depending on the parser used, the node can produce various output types:
 - Structured Dictionaries
 
 # LLM NODE ARCHITECTURE
-![LLM NODE](components/llms/LLM Node Architecture.svg)
+![LLM NODE](LLM%20Node%20Architecture.svg)
