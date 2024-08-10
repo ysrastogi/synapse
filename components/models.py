@@ -26,8 +26,9 @@ class LLMProperties(models.Model):
     logit_bias = models.JSONField(null=True, blank=True)
     logprobs = models.BooleanField(default=False)
     top_logprobs = models.IntegerField(null=True, blank=True)
-    stream = models.BooleanField(null=False, blank=True)
-    
+    stream = models.BooleanField(null=True, blank=True)
+    tool_choice = models.CharField(null=True, blank=True, default="none")
+
     def __str__(self):
         return f"LLMProperties(id={self.id})"
 
