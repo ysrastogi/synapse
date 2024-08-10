@@ -1,5 +1,5 @@
 from django.db import models
-
+from typing import ClassVar
 from pydantic import BaseModel, ConfigDict
 
 class LLMProperties(models.Model):
@@ -26,9 +26,12 @@ class LLMProperties(models.Model):
     def __str__(self):
         return f"LLMProperties(id={self.id})"
 
-class ModelMeta(BaseModel):
-    description= models.TextField(null=True, blank=True)
+class ModelMeta(models.Model):
+    description= models.CharField(null=True, blank=True)
     capabilities = models.JSONField(null=True, blank=True)
+
+    class Config:
+        orm_mode=True
 
 class LLM(models.Model):
     id= models.IntegerField(primary_key=True)
