@@ -4,7 +4,7 @@ from openai import OpenAI, AzureOpenAI
 from components.constants import LLMSource
 
 load_dotenv()
-def get_llm(llm_source, llm_model):
+def get_llm(llm_source=None, llm_model=None):
     
     if llm_source is LLMSource.AZURE:
         return AzureOpenAI(
@@ -14,4 +14,4 @@ def get_llm(llm_source, llm_model):
     )
 
     if llm_source is LLMSource.OPENAI:
-        return OpenAI(openai_api_key=os.getenv("OPENAI_KEY"))
+        return OpenAI(api_key=os.getenv("OPENAI_KEY"))
