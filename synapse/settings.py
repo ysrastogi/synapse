@@ -12,11 +12,16 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
+import django
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 load_dotenv()
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'synapse/settings.py'
 BASE_DIR = Path(__file__).resolve().parent.parent
+# django.setup()
+# sys.path.append(os.path.abspath(os.getenv('PROJECT_PATH')))
 
 
 # Quick-start development settings - unsuitable for production
@@ -41,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'components',
     'interactions',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
