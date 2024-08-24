@@ -47,3 +47,39 @@ class LLM(models.Model):
     
     def __str__(self):
         return self.name
+
+class PromptTemplate(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    content = models.TextField()
+    variables = models.JSONField()  # Store as a JSON array of variable names
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+    
+class PromptCategory(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+    
+class Prompt(models.Model):
+    template = models.ForeignKey(PromptTemplate, on_delete=models.CASCADE)
+    category = models.ForeignKey(PromptCategory, on_delete=models.SET_NULL, null=True)
+    variables_values = models.JSONField()  # Store as a JSON object of variable name-value pairs
+    generated_prompt = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.template.name} - {self.created_at}"
+
+class PromptPerformanceMetric(models.Model):
+    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
+    metric_name = models.CharField(max_length=50)
+    metric_value = models.FloatField()
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.prompt.template.name} - {self.metric_name}: {self.metric_value}"
