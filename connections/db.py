@@ -3,6 +3,7 @@ import psycopg2
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import ApiException
 import sqlite3
+import redis
  
 def connect_and_query(query):
     try:
@@ -41,3 +42,7 @@ def setup_url_cache_database(db_file):
             )
         ''')
         return conn, cursor
+
+def redis_client():
+    client = redis.Redis(host='localhost',port= 6379, db= 0)
+    return client
