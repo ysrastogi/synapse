@@ -6,6 +6,8 @@ from urllib.robotparser import RobotFileParser
 import logging
 import time
 import warnings
+import uuid
+from connections.pubsub import Publisher
 # from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn.naive_bayes import MultinomialNB
 # from sklearn.pipeline import Pipeline
@@ -23,6 +25,8 @@ class EnhancedURLContentExtractor:
         self.max_depth = max_depth
         self.max_pages = max_pages
         self.pages_fetched = 0
+        self.service_id = 'url_processor'+str(uuid.uuid4())
+        self.publisher = Publisher('url_processor_channel', self.service_id)
         # self.setup_content_classifier()
 
         if base_url:
@@ -133,8 +137,11 @@ class EnhancedURLContentExtractor:
                 parsed.scheme in ('http', 'https'))
 
     async def crawl(self):
+        self.publisher.publish("URL_SERVICE_CALLED")
         async with aiohttp.ClientSession() as session:
-            return await self.process_url(session, self.base_url)
+            segments = await self.process_url(session, self.base_url)
+        self.publisher.publish("EXTRACTION_COMPLETED")
+        return segments
 
     def run(self):
         if self.base_url:
