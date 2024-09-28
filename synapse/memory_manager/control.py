@@ -11,6 +11,7 @@ class VersionControl:
         if key not in self.versions:
             self.versions[key]= []
         self.versions[key].append(len(self.versions[key]))
+        return self.versions[key][-1]
     
     def get_version(self, key:str, version:int):
         return self.version[key][version]
