@@ -22,3 +22,10 @@ class Subscriber:
         async for message in self.pubsub.listen():
             if message['type'] == 'message':
                 await self.callback(message['data'].decode('utf-8'))
+
+    async def callback(self, message):
+        """
+        Callback function to handle incoming messages.
+        :param message: The message received from the channel
+        """
+        return message
