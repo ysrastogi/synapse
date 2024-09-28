@@ -6,6 +6,7 @@ from connections.nodes.base import NodeBase
 from components.llms.handlers import handle_prompt, handle_functions, handle_tools
 from components.constants import LLMSource, LLMModelSource
 from components.llms.llm import get_llm
+from components.llms.handlers import handle_prompt, handle_functions, handle_tools
 
 from synapse.memory_manager.shared_memory_manager import SharedMemoryManager
 
@@ -32,11 +33,14 @@ class LLMNode(NodeBase):
         version = input_item.get('version')
 
         if input_type == "Prompt":
-            ...
+            handle_prompt(channel, key, version)
+            
         elif input_type == "Tools":
-            ...
+            handle_tools(channel, key, version)
+
         elif input_type == "Functions":
-            ...
+            handle_functions(channel, key, version)
+            
         elif input_type == "Short Memory":
             ...
         else:

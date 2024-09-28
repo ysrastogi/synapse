@@ -14,7 +14,7 @@ class SynchronizationService:
     
 
 class DistributedLockManager:
-    def __init__(self, redis_url: str):
+    def __init__(self):
         self.redis = redis_client()
 
     @contextmanager

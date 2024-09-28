@@ -13,7 +13,7 @@ from synapse.memory_manager.synchronization import DistributedLockManager
 from connections.pubsub import Publisher
 
 class SharedMemoryManager:
-    def __init__(self, service_id: str, num_partitions: int, mmap_directory: str, cache_capacity: int, cache_expire_time:int, gpu_device_ids: List[int]):
+    def __init__(self, service_id: str, cache_capacity: int, cache_expire_time:int):
         self.tensor_storage = {}
         self.vector_storage = {}
         self.metadata_store = {}
@@ -25,26 +25,27 @@ class SharedMemoryManager:
         self.synchronization_service = SynchronizationService()
         self.memory_allocator = MemoryAllocator()
         self.data_type_manager = DataTypeManager()
-        self.partitioning_service = PartitioningService(num_partitions)
-        self.mmap_manager = MemoryMappedFileManager(mmap_directory)
+        # self.partitioning_service = PartitioningService(num_partitions)
+        # self.mmap_manager = MemoryMappedFileManager(mmap_directory)
         self.cache_manager = CacheManager(capacity=cache_capacity, expire_time=cache_expire_time)
-        self.gpu_memory_manager = GPUMemoryManager(gpu_device_ids)
+        # self.gpu_memory_manager = GPUMemoryManager(gpu_device_ids)
         self.distributed_lock_manager = DistributedLockManager()
 
     def store_text(self, key:str, text: str, metadata: Dict[str, Any] = None):
         with self.distributed_lock_manager.lock(key):
             compressed_text = self.compression_service.compress(text.encode('utf-8'))
             self.text_storage[key] = compressed_text
+            self.cache_manager.put(key, compressed_text)
             self.metadata_store[key] = metadata or {}
             self.version_control.create_version(key)
 
-    def retrieve_text(self, key:str, version:int = None) -> str:
+    def retrieve_text(self, key: str, version: int = None) -> str:
         with self.distributed_lock_manager.lock(key):
-            text_data = self.text_storage[key]
+            text_data = self.cache_manager.get(key)
+            if text_data is None:
+                raise KeyError(f"No data found for key: {key}")
             if version is not None:
                 text_data = self.version_control.get_version(key, version)
-            else:
-                text_data = self.version_control.get_latest_version(key)
             decompressed_text = self.compression_service.decompress(text_data)
             return decompressed_text.decode('utf-8')
 
