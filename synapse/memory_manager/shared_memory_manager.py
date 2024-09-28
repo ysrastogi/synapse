@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from typing import Union, Tuple, Dict, Any
+from typing import Union, Tuple, Dict, Any, List
 
 from synapse.memory_manager.synchronization import SynchronizationService
 from synapse.memory_manager.compression_service import CompressionService
@@ -10,12 +10,15 @@ from synapse.memory_manager.file_manager import MemoryMappedFileManager
 from synapse.memory_manager.cache_manager import CacheManager
 from synapse.memory_manager.gpu_manager import GPUMemoryManager
 from synapse.memory_manager.synchronization import DistributedLockManager
+from connections.pubsub import Publisher
 
 class SharedMemoryManager:
-    def __init__(self, num_partitions: int, mmap_directory: str, cache_capacity: int, gpu_device_ids: List[int]):
+    def __init__(self, service_id: str, num_partitions: int, mmap_directory: str, cache_capacity: int, cache_expire_time:int, gpu_device_ids: List[int]):
         self.tensor_storage = {}
         self.vector_storage = {}
         self.metadata_store = {}
+        self.text_storage = {}
+        self.service_id = service_id
         self.version_control = VersionControl()
         self.compression_service = CompressionService()
         self.access_control = AccessControl()
@@ -24,9 +27,26 @@ class SharedMemoryManager:
         self.data_type_manager = DataTypeManager()
         self.partitioning_service = PartitioningService(num_partitions)
         self.mmap_manager = MemoryMappedFileManager(mmap_directory)
-        self.cache_manager = CacheManager(cache_capacity)
+        self.cache_manager = CacheManager(capacity=cache_capacity, expire_time=cache_expire_time)
         self.gpu_memory_manager = GPUMemoryManager(gpu_device_ids)
         self.distributed_lock_manager = DistributedLockManager()
+
+    def store_text(self, key:str, text: str, metadata: Dict[str, Any] = None):
+        with self.distributed_lock_manager.lock(key):
+            compressed_text = self.compression_service.compress(text.encode('utf-8'))
+            self.text_storage[key] = compressed_text
+            self.metadata_store[key] = metadata or {}
+            self.version_control.create_version(key)
+
+    def retrieve_text(self, key:str, version:int = None) -> str:
+        with self.distributed_lock_manager.lock(key):
+            text_data = self.text_storage[key]
+            if version is not None:
+                text_data = self.version_control.get_version(key, version)
+            else:
+                text_data = self.version_control.get_latest_version(key)
+            decompressed_text = self.compression_service.decompress(text_data)
+            return decompressed_text.decode('utf-8')
 
     def store_tensor(self, key: str, tensor: Union[np.ndarray, torch.Tensor], metadata: Dict[str, Any] = None):
         with self.distributed_lock_manager.lock(key):
@@ -37,7 +57,7 @@ class SharedMemoryManager:
                 self.partitioning_service.store_partitioned(key, compressed_tensor)
                 self.cache_manager.put(key, compressed_tensor)
             self.metadata_store[key] = metadata or {}
-            self.version_control.create_version(key)
+            stored_version = self.version_control.create_version(key)
 
     def retrieve_tensor(self, key: str, version: int = None) -> Union[np.ndarray, torch.Tensor]:
         with self.distributed_lock_manager.lock(key):
@@ -87,5 +107,3 @@ class SharedMemoryManager:
     
     def set_metadata(self, key: str, metadata: Dict[str, Any]):
         self.metadata_store[key] = metadata
-    
-
