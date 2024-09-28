@@ -1,6 +1,6 @@
-import pylibmc
-from typing import Any, Optional
 import sys
+from typing import Any, Optional
+from connections.db import memcached_client
 
 class CacheManager:
     def __init__(self, servers:list[str] = ["127.0.0.1"], capacity:int= 100000000, expire_time:int=3600):
@@ -11,14 +11,8 @@ class CacheManager:
         :capacity: Maximum size of the cache in bytes
         :param expire_time: Time in seconds after which an item should expire (0 means no expiration)
         """
-        self.client = pylibmc.Client(servers, binary=True, behaviors = {
-            "tcp_nodeplay":True,
-            "ketama": True,
-            "remove_failed": 1, 
-            "retry_timeout": 1, 
-            "dead_timeout": 60
-        })
-        self.capacity = capacity,
+        self.client = memcached_client()
+        self.capacity = capacity
         self.expire_time = expire_time
         self.current_capacity = 0
 
@@ -34,22 +28,13 @@ class CacheManager:
         except pylibmc.Error:
             return None
         
-    def put(self, key:str, value:Any):
-        """
-        Add an item to the cache.
-        
-        :param key: The key under which to store the value
-        :param value: The value to store
-        """
-        try:
-            value_size = sys.getsizeof(value)
-            while self.current_capacity + value_size > self.capacity:
-                ...
-            self.client.set(key, value, time=self.expire_time)
-            self.current_capacity += value_size
-        
-        except pylibmc.Error:
-            pass
+    def put(self, key: str, value: bytes):
+        value_size = sys.getsizeof(value)
+        print(f"Storing key: {key}, value size: {value_size}")  # Debug print
+        while self.current_capacity + value_size > self.capacity:
+            self._evict_one()
+        self.client.set(key, value, time=self.expire_time)
+        self.current_capacity += value_size
 
     def evict(self, key:str):
         """

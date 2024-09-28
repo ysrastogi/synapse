@@ -4,6 +4,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import ApiException
 import sqlite3
 import redis
+import pylibmc
  
 def connect_and_query(query):
     try:
@@ -46,3 +47,17 @@ def setup_url_cache_database(db_file):
 def redis_client():
     client = redis.Redis(host='localhost',port= 6379, db= 0)
     return client
+
+def memcached_client(self, servers: list[str] = ["127.0.0.1"]):
+        try:
+            self.memcached_client = pylibmc.Client(servers, binary=True, behaviors={
+                "tcp_nodelay": True,
+                "ketama": True,
+                "remove_failed": 1,
+                "retry_timeout": 1,
+                "dead_timeout": 60
+            })
+            print("Memcached client connection established")
+        except pylibmc.Error as e:
+            print(f"Failed to connect to Memcached: {e}")
+            self.memcached_client = None
