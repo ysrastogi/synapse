@@ -5,6 +5,7 @@ from connections.nodes.base import NodeBase
 
 from components.llms.handlers import handle_prompt, handle_functions, handle_tools
 from components.constants import LLMSource, LLMModelSource
+from components.llms.constant import InputType
 from components.llms.llm import get_llm
 from components.llms.handlers import handle_prompt, handle_functions, handle_tools
 
@@ -32,16 +33,16 @@ class LLMNode(NodeBase):
         key = input_item.get('key')
         version = input_item.get('version')
 
-        if input_type == "Prompt":
+        if input_type == InputType.PROMPT.value:
             handle_prompt(channel, key, version)
             
-        elif input_type == "Tools":
+        elif input_type == InputType.TOOLS.value:
             handle_tools(channel, key, version)
 
-        elif input_type == "Functions":
+        elif input_type == InputType.FUNCTIONS.value:
             handle_functions(channel, key, version)
             
-        elif input_type == "Short Memory":
+        elif input_type == InputType.SHORT_MEMORY.value:
             ...
         else:
             raise ValueError(f"Unsupported input type: {input_type}")
