@@ -1,9 +1,12 @@
 import asyncio
 from typing import Dict, Any, List
 
+from components.prompts.constant import PromptPartType
 from connections.nodes.base import NodeBase
+from connections.pubsub import Publisher
 from components.prompts.constant import InputType
 from components.prompts.handlers import handle_context_prompt, handle_system_prompt, handle_user_prompt
+from components.prompts.processor import processor
 from synapse.memory_manager.shared_memory_manager import SharedMemoryManager
 
 class PromptNode(NodeBase):
@@ -17,7 +20,7 @@ class PromptNode(NodeBase):
         tasks = [self.process_input(input_item) for input_item in inputs]
         await asyncio.gather(*tasks)
     
-    async def process_input(self, input_item):
+    async def process_input(self, input_item:Dict[str, Any], system_prompt:str= None, user_prompt:str= None):
         """
         Process a single input item.
         :param input_item: A dictionary containing 'input_type' and 'data'.
@@ -28,16 +31,17 @@ class PromptNode(NodeBase):
         version = input_item.get('version')
 
         if input_type == InputType.SYSTEM.value:
-            handle_system_prompt(channel, key, version)
+            system_prompt=handle_system_prompt(system_prompt)
         
         elif input_type == InputType.USER.value:
-            handle_user_prompt(channel, key, version)
+            user_prompt=handle_user_prompt(user_prompt)
 
         elif input_type == InputType.CONTEXT.value:
-            handle_context_prompt(channel,key,version)
+            context=handle_context_prompt(channel,key,version)
 
         else:
             raise ValueError(f"Unsupported input type: {input_type}")
         
-        def output(self):
-            ...
+        rendered_prompt = await processor(system_prompt, user_prompt, context)
+        self.memory.store_text(key, rendered_prompt)
+        Publisher(channel).publish("Prompt is Ready")
