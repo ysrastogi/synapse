@@ -8,11 +8,13 @@ async def handle_prompt(channel:str, key:str, version:int):
     :param channel: The channel of the input
     """
     listener = Subsciber(channel)
-    message = await listener.listen()
-    if message == "Prompt is Ready":
-        storage = SharedMemoryManager(service_id=channel)
-        prompt = storage.retrieve_text(key, version)
-    return prompt
+    while True:
+        message = await listener.listen()
+        if message == "Prompt is Ready":
+            storage = SharedMemoryManager(service_id=channel)
+            prompt = storage.retrieve_text(key, version)
+            return prompt
+        asyncio.sleep(0.1)
     
 
 async def handle_tools(channel:str, key:str, version:int):
