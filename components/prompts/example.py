@@ -1,3 +1,5 @@
+from components.prompts.prompt_template import create_prompt_template
+
 def customer_support_example():
     system_prompt = """
     You are a customer support AI assistant for a tech company.
